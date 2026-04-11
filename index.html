@@ -3,891 +3,877 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GreenGuard — Arrosage Connecté</title>
+<title>GreenGuard — 8 Pompes</title>
 <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root {
-  --bg:#0a0f0a;--sf:#111811;--sf2:#162016;--sf3:#1e2e1e;
-  --gr:#4ade80;--gr2:#22c55e;--gd:#14532d;
-  --am:#fbbf24;--bl:#60a5fa;--rd:#f87171;--pu:#c084fc;
-  --tx:#e2ffe8;--td:#86efac;--br:#1e3a1e;--cb:#060d06;
+  --bg:#0d1117; --sf:#161b22; --sf2:#1c2128; --sf3:#21262d;
+  --gr:#3fb950; --gr2:#238636; --glt:#1a2f1a;
+  --am:#d29922; --bl:#58a6ff; --rd:#f85149; --pu:#bc8cff;
+  --tx:#e6edf3; --td:#7d8590; --br:#30363d; --cb:#010409;
+  --border: 1px solid #30363d;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.5;min-height:100vh}
-a{color:var(--gr)}
-button{cursor:pointer;border:none;font-family:inherit}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5}
+button{cursor:pointer;font-family:inherit}
+a{color:var(--bl)}
 
 /* ── LOGIN ── */
-#login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg)}
-.login-card{background:var(--sf);border:1px solid var(--br);border-radius:16px;padding:48px 40px;width:100%;max-width:420px}
-.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
-.login-logo-icon{width:44px;height:44px;background:var(--gd);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.login-logo-text{font-size:22px;font-weight:700;color:var(--gr)}
-.login-logo-sub{font-size:12px;color:var(--td)}
-.login-card h2{font-size:18px;font-weight:600;margin-bottom:8px}
-.login-card p{font-size:13px;color:var(--td);margin-bottom:24px}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:12px;color:var(--td);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.8px}
-.form-group input{width:100%;background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:10px 14px;color:var(--tx);font-size:14px;outline:none;transition:border-color .2s;font-family:monospace}
-.form-group input:focus{border-color:var(--gd)}
-.form-group input::placeholder{color:#3a5a3a}
-.btn-login{width:100%;background:var(--gr);color:#0a0f0a;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity .2s}
-.btn-login:hover{opacity:.85}
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.lcard{background:var(--sf);border:var(--border);border-radius:12px;padding:40px 36px;width:100%;max-width:420px}
+.llogo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.llogo-ico{width:40px;height:40px;background:var(--glt);border:var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.llogo-name{font-size:20px;font-weight:600;color:var(--gr)}
+.llogo-sub{font-size:11px;color:var(--td);margin-top:1px}
+.lcard h2{font-size:16px;font-weight:600;margin-bottom:6px}
+.lcard p{font-size:13px;color:var(--td);margin-bottom:20px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;color:var(--td);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.fg input{width:100%;background:var(--bg);border:var(--border);border-radius:6px;padding:8px 12px;color:var(--tx);font-size:13px;outline:none;transition:border-color .2s;font-family:monospace}
+.fg input:focus{border-color:var(--gr2)}
+.fg input::placeholder{color:#3d444d}
+.btn-login{width:100%;background:var(--gr2);color:#fff;border:none;border-radius:6px;padding:10px;font-size:14px;font-weight:600;margin-top:6px;transition:background .2s}
+.btn-login:hover{background:#2ea043}
 .btn-login:disabled{opacity:.5;cursor:not-allowed}
-.login-hint{margin-top:20px;padding:14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);border-radius:8px;font-size:12px;color:var(--bl)}
-.login-hint strong{display:block;margin-bottom:4px}
-.login-error{margin-top:12px;padding:12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:8px;font-size:13px;color:var(--rd);display:none}
+.lerr{margin-top:10px;padding:10px 14px;background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.3);border-radius:6px;font-size:12px;color:var(--rd);display:none}
+.lhint{margin-top:18px;padding:12px;background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.15);border-radius:6px;font-size:12px;color:#79c0ff;line-height:1.6}
+.lhint strong{display:block;margin-bottom:3px}
 
-/* ── DASHBOARD ── */
-#dashboard{display:none;flex-direction:column;min-height:100vh}
+/* ── APP ── */
+#app{display:none;flex-direction:column;min-height:100vh}
 
 /* Header */
-.hdr{background:var(--sf);border-bottom:1px solid var(--br);padding:0 24px;height:60px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100}
-.hdr-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:var(--gr);flex-shrink:0}
-.hdr-logo-icon{width:32px;height:32px;background:var(--gd);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.hdr-spacer{flex:1}
-.hdr-status{display:flex;align-items:center;gap:8px;font-size:13px}
-.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.status-dot.connected{background:var(--gr);box-shadow:0 0 6px var(--gr)}
-.status-dot.disconnected{background:var(--rd)}
-.status-dot.connecting{background:var(--am);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.hdr-ip{font-family:monospace;font-size:11px;color:var(--td);background:var(--sf2);padding:3px 8px;border-radius:4px}
-.hdr-time{font-size:12px;color:var(--td)}
-.btn-logout{background:none;border:1px solid var(--br);color:var(--td);padding:6px 14px;border-radius:6px;font-size:12px;transition:all .2s}
-.btn-logout:hover{border-color:var(--gr);color:var(--gr)}
+.hdr{background:var(--sf);border-bottom:var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:100}
+.hdr-logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;color:var(--gr);flex-shrink:0}
+.hdr-logo-ico{width:28px;height:28px;background:var(--glt);border:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.hdr-sub{font-size:11px;color:var(--td);display:none}
+@media(min-width:480px){.hdr-sub{display:block}}
+.hdr-sp{flex:1}
+.hdr-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--td)}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot.conn{background:var(--gr)}
+.sdot.disc{background:var(--rd)}
+.sdot.wait{background:var(--am);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-ip{font-family:monospace;font-size:11px;color:var(--td);background:var(--sf2);border:var(--border);border-radius:4px;padding:2px 7px}
+.btn-out{background:none;border:var(--border);color:var(--td);padding:5px 12px;border-radius:6px;font-size:12px;transition:all .2s}
+.btn-out:hover{border-color:var(--gr);color:var(--gr)}
 
 /* Tabs */
-.tabs{background:var(--sf);border-bottom:1px solid var(--br);display:flex;padding:0 24px;gap:2px;overflow-x:auto}
+.tabs{background:var(--sf);border-bottom:var(--border);display:flex;padding:0 20px;gap:0;overflow-x:auto;flex-shrink:0}
 .tabs::-webkit-scrollbar{display:none}
-.tab-btn{background:none;border:none;color:var(--td);font-size:12px;padding:14px 18px;cursor:pointer;white-space:nowrap;letter-spacing:.5px;border-bottom:2px solid transparent;transition:all .2s;font-family:inherit;text-transform:uppercase;font-weight:600}
-.tab-btn.active{color:var(--gr);border-bottom-color:var(--gr)}
-.tab-btn:hover{color:var(--tx)}
-.tab-content{display:none;padding:28px 24px;max-width:1200px;width:100%}
-.tab-content.active{display:block}
+.tab{background:none;border:none;color:var(--td);font-size:12px;padding:12px 16px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px;font-weight:500;transition:all .2s;font-family:inherit}
+.tab.on{color:var(--gr);border-bottom-color:var(--gr)}
+.tab:hover{color:var(--tx)}
 
-/* Metric cards row */
-.metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
-.metric-card{background:var(--sf);border:1px solid var(--br);border-radius:10px;padding:16px 20px}
-.metric-label{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-.metric-value{font-size:28px;font-weight:700;line-height:1}
-.metric-sub{font-size:12px;color:var(--td);margin-top:4px}
-.mv-green{color:var(--gr)}
-.mv-amber{color:var(--am)}
-.mv-red{color:var(--rd)}
-.mv-blue{color:var(--bl)}
+/* Content */
+.content{flex:1;padding:20px;max-width:1100px;width:100%;margin:0 auto}
+.pane{display:none}
+.pane.on{display:block}
+
+/* Metrics */
+.mrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.mc{background:var(--sf);border:var(--border);border-radius:8px;padding:14px 16px}
+.ml{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.mv{font-size:26px;font-weight:600;line-height:1}
+.ms{font-size:11px;color:var(--td);margin-top:3px}
+.c-g{color:var(--gr)} .c-r{color:var(--rd)} .c-b{color:var(--bl)} .c-a{color:var(--am)}
 
 /* Pot grid */
-.pots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:24px}
-.pot-card{background:var(--sf);border:1px solid var(--br);border-radius:12px;padding:20px;transition:border-color .3s;position:relative;overflow:hidden}
-.pot-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:background .3s}
-.pot-card.ok::before{background:var(--gr)}
-.pot-card.medium::before{background:var(--am)}
-.pot-card.dry::before{background:var(--rd)}
-.pot-card.watering::before{background:var(--bl);animation:shimmer 1s infinite}
-@keyframes shimmer{0%,100%{opacity:1}50%{opacity:.5}}
-.pot-card.ok{border-color:#1e3a2e}
-.pot-card.dry{border-color:#3a1e1e}
-.pot-card.medium{border-color:#3a2e1e}
-.pot-card.watering{border-color:#1e2a3a}
-.pot-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.pot-name{font-size:14px;font-weight:600}
-.pot-badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;letter-spacing:.5px}
-.badge-ok{background:rgba(74,222,128,.1);color:var(--gr);border:1px solid rgba(74,222,128,.2)}
-.badge-medium{background:rgba(251,191,36,.1);color:var(--am);border:1px solid rgba(251,191,36,.2)}
-.badge-dry{background:rgba(248,113,113,.1);color:var(--rd);border:1px solid rgba(248,113,113,.2)}
-.badge-watering{background:rgba(96,165,250,.1);color:var(--bl);border:1px solid rgba(96,165,250,.2)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:20px}
+.pot{background:var(--sf);border:var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;transition:border-color .3s}
+.pot::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transition:background .3s}
+.pot.st-ok::before{background:var(--gr)}
+.pot.st-med::before{background:var(--am)}
+.pot.st-dry::before{background:var(--rd)}
+.pot.st-pump::before{background:var(--bl);animation:sh 1s infinite}
+@keyframes sh{0%,100%{opacity:1}50%{opacity:.4}}
+.pot.st-ok{border-color:#1e3a2e}
+.pot.st-dry{border-color:#3a2020}
+.pot.st-med{border-color:#3a2e14}
+.pot.st-pump{border-color:#1e2a3a}
+.pot-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pot-name{font-size:13px;font-weight:600}
+.badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;letter-spacing:.3px}
+.b-ok{background:rgba(63,185,80,.12);color:var(--gr);border:1px solid rgba(63,185,80,.2)}
+.b-med{background:rgba(210,153,34,.12);color:var(--am);border:1px solid rgba(210,153,34,.2)}
+.b-dry{background:rgba(248,81,73,.12);color:var(--rd);border:1px solid rgba(248,81,73,.2)}
+.b-pump{background:rgba(88,166,255,.12);color:var(--bl);border:1px solid rgba(88,166,255,.2)}
 
-/* Gauge SVG */
-.gauge-wrap{display:flex;justify-content:center;margin:4px 0 16px}
-.gauge{width:110px;height:110px}
-.gauge-bg{fill:none;stroke:var(--sf2);stroke-width:10}
-.gauge-fill{fill:none;stroke-width:10;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg);transition:stroke-dashoffset .8s ease, stroke .3s}
-.gauge-ok .gauge-fill{stroke:var(--gr)}
-.gauge-medium .gauge-fill{stroke:var(--am)}
-.gauge-dry .gauge-fill{stroke:var(--rd)}
-.gauge-watering .gauge-fill{stroke:var(--bl)}
-.gauge-pct{font-size:18px;font-weight:700;fill:var(--tx);dominant-baseline:middle;text-anchor:middle}
-.gauge-label{font-size:9px;fill:var(--td);text-anchor:middle}
+/* Gauge */
+.gw{display:flex;justify-content:center;margin:4px 0 12px}
+.CIRC{} /* placeholder */
 
-.pot-info{display:flex;justify-content:space-between;font-size:12px;color:var(--td);margin-bottom:14px}
-.pot-last{font-size:11px;color:var(--td);margin-bottom:14px}
+/* Pot info row */
+.pinfo{display:flex;justify-content:space-between;font-size:11px;color:var(--td);margin-bottom:4px}
+.plast{font-size:10px;color:var(--td);margin-bottom:12px;min-height:14px}
 
-.btn-water{width:100%;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:var(--gr);border-radius:7px;padding:8px;font-size:12px;font-weight:600;transition:all .2s}
-.btn-water:hover{background:rgba(74,222,128,.15);border-color:var(--gr)}
-.btn-water:disabled{opacity:.4;cursor:not-allowed}
-.btn-water.watering-btn{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.3);color:var(--bl)}
+/* Pump button */
+.btn-pump{width:100%;background:var(--sf2);border:var(--border);color:var(--tx);border-radius:6px;padding:7px;font-size:12px;font-weight:500;transition:all .2s}
+.btn-pump:hover{border-color:var(--gr);color:var(--gr)}
+.btn-pump:disabled{opacity:.4;cursor:not-allowed}
+.btn-pump.pumping{background:rgba(88,166,255,.08);border-color:rgba(88,166,255,.3);color:var(--bl)}
+.btn-pump.stop-btn{background:rgba(248,81,73,.08);border-color:rgba(248,81,73,.3);color:var(--rd)}
 
-/* Controls panel */
-.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-@media(max-width:640px){.ctrl-grid{grid-template-columns:1fr}}
-.ctrl-card{background:var(--sf);border:1px solid var(--br);border-radius:12px;padding:20px}
-.ctrl-card h3{font-size:13px;color:var(--am);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;font-weight:600}
-.btn-action{width:100%;background:var(--sf2);border:1px solid var(--br);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;margin-bottom:8px;transition:all .2s;display:flex;align-items:center;gap:8px}
-.btn-action:hover{border-color:var(--gr);color:var(--gr)}
-.btn-action.danger:hover{border-color:var(--rd);color:var(--rd)}
-.btn-action.primary{background:var(--gr);color:#0a0f0a;border-color:var(--gr)}
-.btn-action.primary:hover{opacity:.85;color:#0a0f0a}
-.slider-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.slider-row label{font-size:12px;color:var(--td);width:140px;flex-shrink:0}
-.slider-row input[type=range]{flex:1;accent-color:var(--gr);height:4px}
-.slider-val{font-family:monospace;font-size:13px;color:var(--gr);min-width:36px;text-align:right}
+/* Controls */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:600px){.cgrid{grid-template-columns:1fr}}
+.ccard{background:var(--sf);border:var(--border);border-radius:10px;padding:18px}
+.ch3{font-size:11px;color:var(--am);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:14px}
+.btn-a{width:100%;background:var(--sf2);border:var(--border);color:var(--tx);border-radius:6px;padding:9px 14px;font-size:13px;margin-bottom:8px;text-align:left;transition:all .2s;display:flex;align-items:center;gap:8px;font-family:inherit}
+.btn-a:hover{border-color:var(--gr);color:var(--gr)}
+.btn-a.prim{background:var(--gr2);color:#fff;border-color:var(--gr2)}
+.btn-a.prim:hover{background:#2ea043;color:#fff}
+.btn-a.danger:hover{border-color:var(--rd);color:var(--rd)}
+.btn-a:last-child{margin-bottom:0}
+.sl-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sl-row label{font-size:12px;color:var(--td);min-width:130px;flex-shrink:0}
+.sl-row input[type=range]{flex:1;accent-color:var(--gr)}
+.sl-v{font-family:monospace;font-size:12px;color:var(--gr);min-width:38px;text-align:right}
 
-/* History chart */
-.chart-wrap{background:var(--sf);border:1px solid var(--br);border-radius:12px;padding:20px;margin-bottom:24px}
-.chart-wrap h3{font-size:13px;color:var(--am);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;font-weight:600}
-.chart-controls{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.chart-select{background:var(--sf2);border:1px solid var(--br);color:var(--tx);border-radius:6px;padding:6px 12px;font-size:13px;outline:none;cursor:pointer}
-.chart-container{position:relative;height:240px}
+/* Pumps control grid */
+.ppgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.pp-btn{background:var(--sf2);border:var(--border);color:var(--tx);border-radius:6px;padding:9px 12px;font-size:12px;text-align:left;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:space-between}
+.pp-btn:hover{border-color:var(--gr);color:var(--gr)}
+.pp-on{background:rgba(88,166,255,.08);border-color:rgba(88,166,255,.4);color:var(--bl)}
+
+/* Chart */
+.chart-box{background:var(--sf);border:var(--border);border-radius:10px;padding:18px;margin-bottom:14px}
+.chart-box .ch3{margin-bottom:12px}
+.chart-ctrl{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.csel{background:var(--sf2);border:var(--border);color:var(--tx);border-radius:6px;padding:6px 10px;font-size:12px;outline:none;cursor:pointer;font-family:inherit}
+.chart-h{position:relative;height:220px}
+.log{font-family:monospace;font-size:11px;color:var(--td);line-height:1.9;max-height:200px;overflow-y:auto}
+.log::-webkit-scrollbar{width:4px}
+.log::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
 
 /* Alerts */
-.alerts-section{margin-bottom:24px}
-.alerts-section h3{font-size:13px;color:var(--am);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;font-weight:600}
-.alert-list{display:flex;flex-direction:column;gap:8px}
-.alert-item{display:flex;align-items:center;gap:12px;background:var(--sf);border:1px solid var(--br);border-radius:8px;padding:12px 16px;font-size:13px}
-.alert-item.alert-dry{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.04)}
-.alert-item.alert-ok{border-color:rgba(74,222,128,.2);background:rgba(74,222,128,.04)}
-.alert-time{font-family:monospace;font-size:11px;color:var(--td);margin-left:auto;flex-shrink:0}
-.no-alerts{color:var(--td);font-size:13px;padding:20px;text-align:center;background:var(--sf);border:1px solid var(--br);border-radius:8px}
+.albox{display:flex;gap:10px;padding:11px 14px;border-radius:7px;margin-bottom:10px;font-size:13px;align-items:flex-start}
+.albox.dry{background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);color:#ffa198}
+.albox.ok{background:rgba(63,185,80,.06);border:1px solid rgba(63,185,80,.2);color:#7ee787}
+.al-time{font-family:monospace;font-size:11px;color:var(--td);margin-left:auto;flex-shrink:0;padding-top:1px}
+.no-al{font-size:13px;color:var(--td);padding:20px;text-align:center;background:var(--sf);border:var(--border);border-radius:8px}
 
-/* Arduino code tab */
-.code-wrap{background:var(--cb);border:1px solid var(--br);border-radius:10px;overflow:hidden;margin-bottom:16px}
-.code-hdr{background:var(--sf2);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--br)}
-.code-fn{font-family:monospace;font-size:12px;color:var(--td)}
-.copy-btn{font-family:monospace;font-size:10px;background:var(--gd);color:var(--gr);border:none;padding:4px 12px;border-radius:4px;cursor:pointer;letter-spacing:.5px}
-.copy-btn:hover,.copy-btn.ok{background:var(--gr);color:#0a0f0a}
-pre.code{padding:20px;overflow-x:auto;font-family:monospace;font-size:12px;line-height:1.7;color:var(--td);max-height:500px;overflow-y:auto}
-pre.code::-webkit-scrollbar{width:5px;height:5px}
-pre.code::-webkit-scrollbar-thumb{background:var(--br);border-radius:3px}
-.kw{color:#c792ea}.fn{color:#82aaff}.str{color:#c3e88d}.cmt{color:#546e7a;font-style:italic}.num{color:#f78c6c}.typ{color:#ffcb6b}
-
-/* Notification toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--sf);border:1px solid var(--br);border-radius:10px;padding:14px 20px;font-size:14px;transform:translateY(100px);opacity:0;transition:all .3s;z-index:999;max-width:320px}
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--sf);border:var(--border);border-radius:8px;padding:12px 18px;font-size:13px;transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;max-width:300px}
 .toast.show{transform:translateY(0);opacity:1}
-.toast.toast-ok{border-color:rgba(74,222,128,.4);color:var(--gr)}
-.toast.toast-err{border-color:rgba(248,113,113,.4);color:var(--rd)}
-.toast.toast-info{border-color:rgba(96,165,250,.4);color:var(--bl)}
+.toast.tok{border-color:rgba(63,185,80,.4);color:var(--gr)}
+.toast.terr{border-color:rgba(248,81,73,.4);color:var(--rd)}
+.toast.tinfo{border-color:rgba(88,166,255,.4);color:var(--bl)}
+
+/* Wiring section */
+.wire-table{width:100%;border-collapse:collapse;font-size:12px;font-family:monospace;margin:10px 0}
+.wire-table th{background:var(--sf2);color:var(--am);text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border:var(--border)}
+.wire-table td{padding:8px 12px;border:var(--border);color:var(--td);vertical-align:top}
+.wire-table tr:hover td{background:var(--sf2)}
+.pin{display:inline-block;background:var(--glt);color:var(--gr);padding:1px 7px;border-radius:3px;font-size:10px}
+.pin.pwr{background:#2d1515;color:var(--rd)}
+.pin.gnd{background:#1e1e1e;color:#888}
+.pin.ana{background:#152038;color:var(--bl)}
+.pin.dig{background:#2a2008;color:var(--am)}
+.schema-box{background:var(--cb);border:var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.schema-hdr{background:var(--sf2);padding:9px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:var(--border)}
+.schema-fn{font-family:monospace;font-size:12px;color:var(--td)}
+.cp-btn{font-family:monospace;font-size:10px;background:var(--glt);color:var(--gr);border:none;padding:3px 10px;border-radius:3px;cursor:pointer;transition:all .2s}
+.cp-btn:hover,.cp-btn.ok{background:var(--gr);color:#0a0a0a}
+pre.code{padding:18px;overflow-x:auto;font-family:monospace;font-size:12px;line-height:1.7;color:var(--td);max-height:520px;overflow-y:auto}
+pre.code::-webkit-scrollbar{width:4px;height:4px}
+pre.code::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
+.kw{color:#ff7b72} .fn{color:#d2a8ff} .str{color:#a5d6ff} .cmt{color:#484f58;font-style:italic} .num{color:#79c0ff} .pp{color:#ffa657}
 </style>
 </head>
 <body>
 
-<!-- ══ LOGIN SCREEN ══ -->
+<!-- ══ LOGIN ══ -->
 <div id="login">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="login-logo-icon">🌱</div>
+  <div class="lcard">
+    <div class="llogo">
+      <div class="llogo-ico">🌱</div>
       <div>
-        <div class="login-logo-text">GreenGuard</div>
-        <div class="login-logo-sub">Arrosage connecté · 8 pots de tomates</div>
+        <div class="llogo-name">GreenGuard</div>
+        <div class="llogo-sub">8 pompes individuelles · tomates</div>
       </div>
     </div>
-    <h2>Connexion sécurisée</h2>
-    <p>Entrez les identifiants de votre broker MQTT (HiveMQ Cloud ou autre)</p>
-    <div class="form-group">
-      <label>Broker WebSocket URL</label>
-      <input id="inp-broker" type="text" placeholder="wss://xxxx.hivemq.cloud:8884/mqtt" value="">
-    </div>
-    <div class="form-group">
-      <label>Nom d'utilisateur</label>
-      <input id="inp-user" type="text" placeholder="greenguard_user" autocomplete="username">
-    </div>
-    <div class="form-group">
-      <label>Mot de passe</label>
-      <input id="inp-pass" type="password" placeholder="••••••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-login" id="btn-connect">Se connecter →</button>
-    <div class="login-error" id="login-error"></div>
-    <div class="login-hint">
-      <strong>💡 Brk gr</strong>
-          </div>
+    <h2>Connexion MQTT sécurisée</h2>
+    <p>Entrez vos credentials HiveMQ Cloud pour accéder au dashboard</p>
+    <div class="fg"><label>Broker WebSocket URL</label><input id="inp-b" type="text" placeholder="wss://xxxxx.s1.eu.hivemq.cloud:8884/mqtt"></div>
+    <div class="fg"><label>Nom d'utilisateur</label><input id="inp-u" type="text" placeholder="greenguard_user" autocomplete="username"></div>
+    <div class="fg"><label>Mot de passe</label><input id="inp-p" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" id="btn-go">Se connecter →</button>
+    <div class="lerr" id="lerr"></div>
+    <div class="lhint"><strong>💡 Broker gratuit</strong>Créer un compte sur hivemq.com → copier l'URL WSS (port 8884) → créer un utilisateur dans Access Management.</div>
   </div>
 </div>
 
-<!-- ══ DASHBOARD ══ -->
-<div id="dashboard" style="flex-direction:column">
-
+<!-- ══ APP ══ -->
+<div id="app">
   <div class="hdr">
-    <div class="hdr-logo"><div class="hdr-logo-icon">🌱</div> GreenGuard</div>
-    <div class="hdr-spacer"></div>
-    <div class="hdr-status">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-text" style="font-size:13px;color:var(--td)">Connexion…</span>
-    </div>
+    <div class="hdr-logo"><div class="hdr-logo-ico">🌱</div>GreenGuard</div>
+    <div class="hdr-sub">8 pompes individuelles</div>
+    <div class="hdr-sp"></div>
+    <div class="hdr-pill"><div class="sdot" id="sdot"></div><span id="stxt" style="font-size:12px">—</span></div>
     <div class="hdr-ip" id="hdr-ip">—</div>
-    <div class="hdr-time" id="hdr-time">—</div>
-    <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    <span id="hdr-t" style="font-size:11px;color:var(--td)"></span>
+    <button class="btn-out" onclick="logout()">Quitter</button>
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('overview',this)">Vue d'ensemble</button>
-    <button class="tab-btn" onclick="showTab('controls',this)">Contrôles</button>
-    <button class="tab-btn" onclick="showTab('history',this)">Historique</button>
-    <button class="tab-btn" onclick="showTab('alerts',this)">Alertes <span id="alert-badge"></span></button>
-    <button class="tab-btn" onclick="showTab('code',this)">Arduino MQTT</button>
+    <button class="tab on" onclick="goTab('ov',this)">Vue d'ensemble</button>
+    <button class="tab" onclick="goTab('ctrl',this)">Contrôles</button>
+    <button class="tab" onclick="goTab('hist',this)">Historique</button>
+    <button class="tab" onclick="goTab('al',this)">Alertes <span id="al-badge"></span></button>
+    <button class="tab" onclick="goTab('wir',this)">Branchements</button>
+    <button class="tab" onclick="goTab('cod',this)">Code Arduino</button>
   </div>
 
-  <!-- TAB: Overview -->
-  <div class="tab-content active" id="tab-overview" style="max-width:1200px;width:100%;margin:0 auto">
-    <div class="metrics-row">
-      <div class="metric-card"><div class="metric-label">Pots OK</div><div class="metric-value mv-green" id="m-ok">—</div><div class="metric-sub">humidité suffisante</div></div>
-      <div class="metric-card"><div class="metric-label">Pots secs</div><div class="metric-value mv-red" id="m-dry">—</div><div class="metric-sub">besoin d'eau</div></div>
-      <div class="metric-card"><div class="metric-label">Pompe</div><div class="metric-value mv-blue" id="m-pump">—</div><div class="metric-sub" id="m-pump-sub">état actuel</div></div>
-      <div class="metric-card"><div class="metric-label">Dernière lecture</div><div class="metric-value mv-amber" id="m-last" style="font-size:16px;padding-top:6px">—</div><div class="metric-sub">mise à jour</div></div>
+  <div class="content">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="pane on" id="pane-ov">
+      <div class="mrow">
+        <div class="mc"><div class="ml">Pots OK</div><div class="mv c-g" id="m-ok">—</div><div class="ms">humidité suffisante</div></div>
+        <div class="mc"><div class="ml">Pots secs</div><div class="mv c-r" id="m-dry">—</div><div class="ms">besoin d'eau</div></div>
+        <div class="mc"><div class="ml">Pompes actives</div><div class="mv c-b" id="m-pump">—</div><div class="ms">en cours d'arrosage</div></div>
+        <div class="mc"><div class="ml">Dernière MAJ</div><div class="mv c-a" id="m-upd" style="font-size:16px;padding-top:5px">—</div><div class="ms">lecture capteurs</div></div>
+      </div>
+      <div class="pgrid" id="pgrid"></div>
     </div>
-    <div class="pots-grid" id="pots-grid"></div>
-  </div>
 
-  <!-- TAB: Controls -->
-  <div class="tab-content" id="tab-controls" style="max-width:1200px;width:100%;margin:0 auto">
-    <div class="ctrl-grid">
-      <div class="ctrl-card">
-        <h3>⚙️ Actions rapides</h3>
-        <button class="btn-action primary" onclick="sendCmd({action:'arroser_secs'})">💧 Arroser tous les pots secs</button>
-        <button class="btn-action" onclick="sendCmd({action:'lire_capteurs'})">📡 Forcer lecture capteurs</button>
-        <button class="btn-action danger" onclick="sendCmd({action:'stop_arrosage'})">⛔ Arrêter arrosage en cours</button>
-        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--br)">
-          <div style="font-size:12px;color:var(--td);margin-bottom:8px">Pompe principale</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn-action" style="flex:1;margin-bottom:0" onclick="sendCmd({action:'pompe',etat:'on'})">🔛 ON</button>
-            <button class="btn-action danger" style="flex:1;margin-bottom:0" onclick="sendCmd({action:'pompe',etat:'off'})">⭕ OFF</button>
-          </div>
+    <!-- ── CONTROLS ── -->
+    <div class="pane" id="pane-ctrl">
+      <div class="cgrid">
+        <div class="ccard">
+          <div class="ch3">Actions globales</div>
+          <button class="btn-a prim" onclick="cmd({action:'arroser_secs'})">💧 Arroser tous les pots secs</button>
+          <button class="btn-a" onclick="cmd({action:'lire_capteurs'})">📡 Forcer lecture capteurs</button>
+          <button class="btn-a danger" onclick="cmd({action:'stop_arrosage'})">⛔ Arrêter toutes les pompes</button>
+        </div>
+        <div class="ccard">
+          <div class="ch3">Paramètres arrosage</div>
+          <div class="sl-row"><label>Seuil déclenchement (%)</label><input type="range" min="10" max="60" value="35" step="1" id="sl-dry" oninput="updSl('sl-dry','sv-dry');sendParams()"><span class="sl-v" id="sv-dry">35%</span></div>
+          <div class="sl-row"><label>Seuil d'arrêt (%)</label><input type="range" min="40" max="90" value="65" step="1" id="sl-wet" oninput="updSl('sl-wet','sv-wet');sendParams()"><span class="sl-v" id="sv-wet">65%</span></div>
+          <div class="sl-row"><label>Durée pompage (s)</label><input type="range" min="2" max="60" value="8" step="1" id="sl-dur" oninput="updSl('sl-dur','sv-dur');sendParams()"><span class="sl-v" id="sv-dur">8s</span></div>
+          <div class="sl-row"><label>Intervalle lecture (min)</label><input type="range" min="1" max="60" value="0.5" step="1" id="sl-int" oninput="updSl('sl-int','sv-int');sendParams()"><span class="sl-v" id="sv-int">1 min</span></div>
+          <button class="btn-a prim" style="margin-top:4px" onclick="sendParams(true)">💾 Appliquer sur Arduino</button>
         </div>
       </div>
-      <div class="ctrl-card">
-        <h3>🎛️ Paramètres arrosage</h3>
-        <div class="slider-row">
-          <label>Seuil sec (%)</label>
-          <input type="range" min="10" max="60" value="35" id="sl-dry" oninput="updSlider('sl-dry','sv-dry');sendParam()">
-          <span class="slider-val" id="sv-dry">35%</span>
-        </div>
-        <div class="slider-row">
-          <label>Seuil humide (%)</label>
-          <input type="range" min="40" max="90" value="65" id="sl-wet" oninput="updSlider('sl-wet','sv-wet');sendParam()">
-          <span class="slider-val" id="sv-wet">65%</span>
-        </div>
-        <div class="slider-row">
-          <label>Durée arrosage (s)</label>
-          <input type="range" min="3" max="60" value="10" id="sl-dur" oninput="updSlider('sl-dur','sv-dur');sendParam()">
-          <span class="slider-val" id="sv-dur">10s</span>
-        </div>
-        <div class="slider-row">
-          <label>Intervalle lecture (min)</label>
-          <input type="range" min="1" max="60" value="5" id="sl-int" oninput="updSlider('sl-int','sv-int');sendParam()">
-          <span class="slider-val" id="sv-int">5 min</span>
-        </div>
-        <button class="btn-action primary" style="margin-top:8px" onclick="sendParam(true)">💾 Appliquer sur Arduino</button>
+      <div class="ccard">
+        <div class="ch3">Contrôle individuel des pompes</div>
+        <div class="ppgrid" id="ppgrid"></div>
       </div>
     </div>
-    <!-- Individual pots control -->
-    <div class="ctrl-card" style="margin-bottom:16px">
-      <h3>🪴 Arrosage individuel</h3>
-      <div id="ctrl-pots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px"></div>
-    </div>
-  </div>
 
-  <!-- TAB: History -->
-  <div class="tab-content" id="tab-history" style="max-width:1200px;width:100%;margin:0 auto">
-    <div class="chart-wrap">
-      <h3>📈 Évolution humidité</h3>
-      <div class="chart-controls">
-        <select class="chart-select" id="chart-pot-sel" onchange="updateChart()">
-          <option value="all">Tous les pots</option>
-          <option value="0">Pot 1</option><option value="1">Pot 2</option>
-          <option value="2">Pot 3</option><option value="3">Pot 4</option>
-          <option value="4">Pot 5</option><option value="5">Pot 6</option>
-          <option value="6">Pot 7</option><option value="7">Pot 8</option>
-        </select>
-        <select class="chart-select" id="chart-range" onchange="updateChart()">
-          <option value="20">20 dernières lectures</option>
-          <option value="50">50 lectures</option>
-          <option value="100">100 lectures</option>
-        </select>
-        <button class="btn-action" style="padding:6px 14px;margin-bottom:0;font-size:12px" onclick="clearHistory()">Effacer</button>
+    <!-- ── HISTORY ── -->
+    <div class="pane" id="pane-hist">
+      <div class="chart-box">
+        <div class="ch3">Évolution humidité</div>
+        <div class="chart-ctrl">
+          <select class="csel" id="cs-pot" onchange="updChart()">
+            <option value="all">Tous les pots</option>
+            <option value="0">Pot 1</option><option value="1">Pot 2</option>
+            <option value="2">Pot 3</option><option value="3">Pot 4</option>
+            <option value="4">Pot 5</option><option value="5">Pot 6</option>
+            <option value="6">Pot 7</option><option value="7">Pot 8</option>
+          </select>
+          <select class="csel" id="cs-rng" onchange="updChart()">
+            <option value="20">20 lectures</option>
+            <option value="50">50 lectures</option>
+            <option value="100">100 lectures</option>
+          </select>
+          <button class="btn-a" style="padding:5px 12px;margin:0;font-size:12px;width:auto" onclick="clearHist()">Effacer</button>
+        </div>
+        <div class="chart-h"><canvas id="hchart"></canvas></div>
       </div>
-      <div class="chart-container"><canvas id="history-chart"></canvas></div>
-    </div>
-    <!-- Watering log -->
-    <div class="chart-wrap">
-      <h3>💧 Journal d'arrosage</h3>
-      <div id="watering-log" style="max-height:300px;overflow-y:auto;font-size:13px;font-family:monospace;color:var(--td)">
-        <div style="color:var(--td);padding:12px;text-align:center">Aucun événement enregistré</div>
+      <div class="chart-box">
+        <div class="ch3">Journal d'arrosage</div>
+        <div class="log" id="wlog"><div style="color:var(--td);text-align:center;padding:16px">En attente d'événements...</div></div>
       </div>
     </div>
-  </div>
 
-  <!-- TAB: Alerts -->
-  <div class="tab-content" id="tab-alerts" style="max-width:1200px;width:100%;margin:0 auto">
-    <div class="alerts-section">
-      <h3>🔔 Alertes actives</h3>
-      <div class="alert-list" id="alerts-list"><div class="no-alerts">Aucune alerte · tout va bien 🌱</div></div>
-    </div>
-    <div class="ctrl-card" style="margin-top:16px">
-      <h3>⚙️ Configuration alertes</h3>
-      <div class="slider-row"><label>Seuil alerte critique (%)</label><input type="range" min="5" max="30" value="20" id="sl-alert" oninput="updSlider('sl-alert','sv-alert')"><span class="slider-val" id="sv-alert">20%</span></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
-        <input type="checkbox" id="chk-notif" style="accent-color:var(--gr);width:16px;height:16px">
-        <label for="chk-notif" style="font-size:13px;color:var(--td)">Activer notifications navigateur</label>
+    <!-- ── ALERTS ── -->
+    <div class="pane" id="pane-al">
+      <div id="allist"><div class="no-al">Aucune alerte · tout va bien 🌱</div></div>
+      <div class="ccard" style="margin-top:16px">
+        <div class="ch3">Configuration alertes</div>
+        <div class="sl-row"><label>Seuil critique (%)</label><input type="range" min="5" max="30" value="20" step="1" id="sl-al" oninput="updSl('sl-al','sv-al')"><span class="sl-v" id="sv-al">20%</span></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <input type="checkbox" id="chk-notif" style="accent-color:var(--gr);width:14px;height:14px">
+          <label for="chk-notif" style="font-size:12px;color:var(--td);cursor:pointer">Notifications navigateur</label>
+        </div>
       </div>
-      <button class="btn-action" style="margin-top:12px" onclick="testNotif()">🔔 Tester notification</button>
     </div>
-  </div>
 
-  <!-- TAB: Arduino MQTT code -->
-  <div class="tab-content" id="tab-code" style="max-width:1000px;width:100%;margin:0 auto">
-    <div style="background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.2);border-radius:10px;padding:16px;margin-bottom:16px;font-size:13px;color:var(--bl)">
-      <strong>Bibliothèques requises :</strong> WiFiNINA · PubSubClient (knolleary) · ArduinoJson (Benoit Blanchon)<br>
-      Installer via <strong>Outils → Gérer les bibliothèques</strong> dans l'IDE Arduino.
+    <!-- ── WIRING ── -->
+    <div class="pane" id="pane-wir">
+      <div style="background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.15);border-radius:8px;padding:13px;margin-bottom:16px;font-size:13px;color:#79c0ff;line-height:1.7">
+        <strong>Architecture 8 pompes :</strong> chaque pot a sa propre petite pompe 5V DC submersible, contrôlée par un relais. Pas de pompe principale, pas de vanne solénoïde. Le circuit est beaucoup plus simple.
+      </div>
+      <div class="ccard" style="margin-bottom:14px">
+        <div class="ch3">Multiplexeur CD74HC4067 → Arduino</div>
+        <table class="wire-table">
+          <tr><th>Broche Mux</th><th>Broche Arduino</th><th>Fonction</th></tr>
+          <tr><td><span class="pin ana">SIG</span></td><td><span class="pin ana">A0</span></td><td>Signal analogique sortie</td></tr>
+          <tr><td><span class="pin dig">S0</span></td><td><span class="pin dig">D2</span></td><td>Sélection canal bit 0</td></tr>
+          <tr><td><span class="pin dig">S1</span></td><td><span class="pin dig">D3</span></td><td>Sélection canal bit 1</td></tr>
+          <tr><td><span class="pin dig">S2</span></td><td><span class="pin dig">D4</span></td><td>Sélection canal bit 2</td></tr>
+          <tr><td><span class="pin dig">S3</span></td><td><span class="pin dig">D5</span></td><td>Sélection canal bit 3</td></tr>
+          <tr><td><span class="pin dig">EN</span></td><td><span class="pin gnd">GND</span></td><td>Enable actif bas → relier à GND</td></tr>
+          <tr><td><span class="pin pwr">VCC</span></td><td><span class="pin pwr">5V Arduino</span></td><td>Alimentation mux</td></tr>
+          <tr><td><span class="pin gnd">GND</span></td><td><span class="pin gnd">GND</span></td><td>Masse</td></tr>
+        </table>
+      </div>
+      <div class="ccard" style="margin-bottom:14px">
+        <div class="ch3">Capteurs d'humidité (×8) → Multiplexeur</div>
+        <table class="wire-table">
+          <tr><th>Capteur</th><th>Broche capteur</th><th>Broche Mux</th></tr>
+          <tr><td>Pot 1</td><td>AOUT</td><td><span class="pin ana">C0</span></td></tr>
+          <tr><td>Pot 2</td><td>AOUT</td><td><span class="pin ana">C1</span></td></tr>
+          <tr><td>Pot 3</td><td>AOUT</td><td><span class="pin ana">C2</span></td></tr>
+          <tr><td>Pot 4</td><td>AOUT</td><td><span class="pin ana">C3</span></td></tr>
+          <tr><td>Pot 5</td><td>AOUT</td><td><span class="pin ana">C4</span></td></tr>
+          <tr><td>Pot 6</td><td>AOUT</td><td><span class="pin ana">C5</span></td></tr>
+          <tr><td>Pot 7</td><td>AOUT</td><td><span class="pin ana">C6</span></td></tr>
+          <tr><td>Pot 8</td><td>AOUT</td><td><span class="pin ana">C7</span></td></tr>
+          <tr><td>Tous</td><td>VCC</td><td><span class="pin pwr">3.3V Arduino</span></td></tr>
+          <tr><td>Tous</td><td>GND</td><td><span class="pin gnd">GND</span></td></tr>
+        </table>
+      </div>
+      <div class="ccard" style="margin-bottom:14px">
+        <div class="ch3">Module relais 8 canaux → Arduino → Pompes 5V</div>
+        <table class="wire-table">
+          <tr><th>Relais IN</th><th>Arduino</th><th>Pompe</th><th>Note</th></tr>
+          <tr><td>IN1</td><td><span class="pin dig">D6</span></td><td>Pompe pot 1</td><td>LOW = pompe ON</td></tr>
+          <tr><td>IN2</td><td><span class="pin dig">D7</span></td><td>Pompe pot 2</td><td></td></tr>
+          <tr><td>IN3</td><td><span class="pin dig">D8</span></td><td>Pompe pot 3</td><td></td></tr>
+          <tr><td>IN4</td><td><span class="pin dig">D9</span></td><td>Pompe pot 4</td><td></td></tr>
+          <tr><td>IN5</td><td><span class="pin dig">D10</span></td><td>Pompe pot 5</td><td></td></tr>
+          <tr><td>IN6</td><td><span class="pin dig">D11</span></td><td>Pompe pot 6</td><td></td></tr>
+          <tr><td>IN7</td><td><span class="pin dig">D12</span></td><td>Pompe pot 7</td><td></td></tr>
+          <tr><td>IN8</td><td><span class="pin dig">D13</span></td><td>Pompe pot 8</td><td></td></tr>
+          <tr><td>VCC</td><td><span class="pin pwr">5V Arduino</span></td><td colspan="2">Alimentation logique relais</td></tr>
+          <tr><td>GND</td><td><span class="pin gnd">GND commun</span></td><td colspan="2">Masse partagée alim. 5V externe</td></tr>
+          <tr><td>COM (×8)</td><td>—</td><td colspan="2"><span class="pin pwr">5V externe (alim. séparée 2A+)</span></td></tr>
+          <tr><td>NO (×8)</td><td>—</td><td colspan="2">Fil + de chaque pompe (retour pompe → GND alim.)</td></tr>
+        </table>
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);border-radius:6px;font-size:12px;color:#ffa198">
+          ⚠️ Ne jamais alimenter les 8 pompes depuis le 5V de l'Arduino — courant insuffisant. Utiliser une alimentation externe 5V 2A+ avec GND partagé.
+        </div>
+      </div>
     </div>
-    <div class="code-wrap">
-      <div class="code-hdr"><span class="code-fn">arrosage_mqtt.ino</span><button class="copy-btn" onclick="copyArduino()">COPIER</button></div>
-      <pre class="code" id="arduino-code-display"></pre>
-    </div>
-  </div>
 
-</div><!-- /dashboard -->
+    <!-- ── CODE ── -->
+    <div class="pane" id="pane-cod">
+      <div style="background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.15);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:#79c0ff;line-height:1.7">
+        <strong>Bibliothèques requises</strong> (Outils → Gérer les bibliothèques) :<br>
+        <code>WiFiNINA</code> · <code>PubSubClient</code> (knolleary) · <code>ArduinoJson</code> (Benoit Blanchon)<br>
+        Dans PubSubClient.h : changer <code>MQTT_MAX_PACKET_SIZE</code> de 128 à <strong>512</strong>
+      </div>
+      <div class="schema-box">
+        <div class="schema-hdr"><span class="schema-fn">arrosage_8pompes.ino</span><button class="cp-btn" id="cpbtn" onclick="copyCode()">COPIER</button></div>
+        <pre class="code" id="codepre"></pre>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-//  ARDUINO CODE (stored as JS string)
-// ══════════════════════════════════════════
-const ARDUINO_CODE = `// =============================================
-//  ARROSAGE MQTT — Arduino Uno WiFi Rev2
-//  GreenGuard v2.0 — Plateforme web sécurisée
-// =============================================
+// ══════════════════════════════════════════════════════════
+//  CODE ARDUINO (stocké ici pour affichage + copie)
+// ══════════════════════════════════════════════════════════
+const ARDUINO_SRC = `// =====================================================================
+//  ARROSAGE AUTOMATIQUE — 8 POMPES INDIVIDUELLES (1 par pot)
+//  Arduino Uno WiFi Rev2 + Capteurs d'humidité + MQTT HiveMQ Cloud
+//  v3.0 — Sans vanne solénoïde — Architecture simplifiée
+// =====================================================================
+
 #include <WiFiNINA.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-// === WiFi ===
-const char* WIFI_SSID = "TON_WIFI";
-const char* WIFI_PASS = "MOT_DE_PASSE_WIFI";
+const char* WIFI_SSID    = "TON_WIFI_SSID";
+const char* WIFI_PASS    = "TON_WIFI_MOT_DE_PASSE";
+const char* MQTT_SERVER  = "XXXXX.s1.eu.hivemq.cloud";
+const int   MQTT_PORT    = 8883;
+const char* MQTT_USER    = "greenguard_user";
+const char* MQTT_PASS    = "TonMotDePasseMQTT!";
+const char* CLIENT_ID    = "arduino_8pompes_001";
 
-// === MQTT Broker (HiveMQ Cloud) ===
-const char* MQTT_SERVER = "xxxx.s1.eu.hivemq.cloud";
-const int   MQTT_PORT   = 8883;  // TLS
-const char* MQTT_USER   = "greenguard_user";
-const char* MQTT_PASS   = "MotDePasseMQTT!";
-const char* CLIENT_ID   = "arduino_tomates_001";
+const char* TOP_DATA     = "tomates/data";
+const char* TOP_STATUS   = "tomates/status";
+const char* TOP_EVENTS   = "tomates/events";
+const char* TOP_CTRL     = "tomates/controle";
+const char* TOP_PARAMS   = "tomates/params";
 
-// === Topics MQTT ===
-const char* TOP_DATA    = "tomates/data";      // Publication données
-const char* TOP_STATUS  = "tomates/status";    // Publication statut
-const char* TOP_CTRL    = "tomates/controle";  // Abonnement commandes
-const char* TOP_PARAMS  = "tomates/params";    // Abonnement paramètres
-
-// === Broches ===
+// Multiplexeur
 const int MUX_S0=2, MUX_S1=3, MUX_S2=4, MUX_S3=5, MUX_SIG=A0;
-const int RELAY_VANNES[8] = {6,7,8,9,10,11,12,13};
-const int RELAY_POMPE = 1;
 
-// === Paramètres (modifiables via MQTT) ===
-int SEUIL_SEC    = 600;   // Valeur brute (0-1023)
-int SEUIL_HUMIDE = 350;
-int DUREE_ARR    = 10000; // ms
-int INTERVALLE   = 30000; // ms lecture
+// Relais pompes D6..D13 (LOW = pompe ON)
+const int RELAY_POMPE[8] = {6,7,8,9,10,11,12,13};
 
-// === Variables ===
-int humidite[8];
-bool pompeOn = false;
-unsigned long dernierePubli = 0;
+int   SEUIL_SEC    = 600;
+int   SEUIL_HUMIDE = 350;
+long  DUREE_POMPAGE = 8000;
+long  INTERVALLE    = 30000;
+
+int  humidite[8];
+bool pompeActive[8];
+unsigned long derniereLecture = 0;
+unsigned long debutPompage[8];
+
 WiFiSSLClient wifiClient;
-PubSubClient mqtt(wifiClient);
+PubSubClient  mqtt(wifiClient);
 
-// ─── Multiplexeur ───
-void selectMux(int ch) {
-  digitalWrite(MUX_S0,(ch>>0)&1); digitalWrite(MUX_S1,(ch>>1)&1);
-  digitalWrite(MUX_S2,(ch>>2)&1); digitalWrite(MUX_S3,(ch>>3)&1);
+void selectMux(int c){
+  digitalWrite(MUX_S0,(c>>0)&1); digitalWrite(MUX_S1,(c>>1)&1);
+  digitalWrite(MUX_S2,(c>>2)&1); digitalWrite(MUX_S3,(c>>3)&1);
 }
-int lireCapteur(int i) {
+
+int lireCapteur(int i){
   selectMux(i); delay(10);
   int s=0; for(int j=0;j<5;j++){s+=analogRead(MUX_SIG);delay(5);}
   return s/5;
 }
-int brut2pct(int v) {
-  v=constrain(v,290,820);
-  return map(v,820,290,0,100);
+
+int brutEnPct(int v){ v=constrain(v,290,820); return map(v,820,290,0,100); }
+
+void ipVersChaine(char* buf){
+  IPAddress ip=WiFi.localIP();
+  sprintf(buf,"%d.%d.%d.%d",ip[0],ip[1],ip[2],ip[3]);
 }
 
-// ─── Arrosage ───
-void arroserPot(int i, int duree=0) {
-  if(duree==0) duree=DUREE_ARR;
-  digitalWrite(RELAY_POMPE,LOW); pompeOn=true;
-  delay(200);
-  digitalWrite(RELAY_VANNES[i],LOW);
-  
-  // Publier événement arrosage
+void activerPompe(int i){
+  if(pompeActive[i]) return;
+  digitalWrite(RELAY_POMPE[i],LOW);
+  pompeActive[i]=true; debutPompage[i]=millis();
   StaticJsonDocument<128> ev;
-  ev["type"]="arrosage_debut"; ev["pot"]=i+1;
-  ev["duree"]=duree/1000;
-  char buf[128]; serializeJson(ev,buf);
-  mqtt.publish("tomates/events",buf);
-  
-  delay(duree);
-  digitalWrite(RELAY_VANNES[i],HIGH);
-  
+  ev["type"]="arrosage_debut"; ev["pot"]=i+1; ev["duree"]=DUREE_POMPAGE/1000;
+  char buf[128]; serializeJson(ev,buf); mqtt.publish(TOP_EVENTS,buf);
+}
+
+void arreterPompe(int i){
+  digitalWrite(RELAY_POMPE[i],HIGH); pompeActive[i]=false;
+  StaticJsonDocument<64> ev;
   ev["type"]="arrosage_fin"; ev["pot"]=i+1;
-  serializeJson(ev,buf); mqtt.publish("tomates/events",buf);
-}
-void eteindrePompe() {
-  digitalWrite(RELAY_POMPE,HIGH); pompeOn=false;
+  char buf[64]; serializeJson(ev,buf); mqtt.publish(TOP_EVENTS,buf);
 }
 
-// ─── Callback MQTT (réception commandes) ───
-void mqttCallback(char* topic, byte* payload, unsigned int len) {
-  StaticJsonDocument<256> doc;
-  DeserializationError err = deserializeJson(doc,payload,len);
-  if(err) return;
+void arreterTout(){ for(int i=0;i<8;i++) if(pompeActive[i]) arreterPompe(i); }
 
-  String topicStr = String(topic);
-
-  if(topicStr == TOP_CTRL) {
-    String action = doc["action"].as<String>();
-    
-    if(action == "arroser") {
-      int pot = doc["pot"].as<int>() - 1;
-      int dur = doc.containsKey("duree") ? doc["duree"].as<int>()*1000 : DUREE_ARR;
-      if(pot>=0 && pot<8) { arroserPot(pot,dur); eteindrePompe(); }
-    }
-    else if(action == "arroser_secs") {
-      for(int i=0;i<8;i++) {
-        humidite[i]=lireCapteur(i);
-        if(humidite[i]>SEUIL_SEC) arroserPot(i);
-      }
-      eteindrePompe();
-    }
-    else if(action == "lire_capteurs") {
-      publierDonnees();
-    }
-    else if(action == "stop_arrosage") {
-      for(int i=0;i<8;i++) digitalWrite(RELAY_VANNES[i],HIGH);
-      eteindrePompe();
-    }
-    else if(action == "pompe") {
-      String etat = doc["etat"].as<String>();
-      if(etat=="on") { digitalWrite(RELAY_POMPE,LOW); pompeOn=true; }
-      else           { eteindrePompe(); }
-    }
-  }
-  else if(topicStr == TOP_PARAMS) {
-    if(doc.containsKey("seuil_sec"))    SEUIL_SEC    = map(doc["seuil_sec"].as<int>(),0,100,820,290);
-    if(doc.containsKey("seuil_humide")) SEUIL_HUMIDE = map(doc["seuil_humide"].as<int>(),0,100,820,290);
-    if(doc.containsKey("duree"))        DUREE_ARR    = doc["duree"].as<int>()*1000;
-    if(doc.containsKey("intervalle"))   INTERVALLE   = doc["intervalle"].as<int>()*60000;
-  }
+void gererArretPompes(){
+  for(int i=0;i<8;i++)
+    if(pompeActive[i] && millis()-debutPompage[i]>=(unsigned long)DUREE_POMPAGE)
+      arreterPompe(i);
 }
 
-// ─── Publication données JSON ───
-void publierDonnees() {
+void publierDonnees(){
+  for(int i=0;i<8;i++) humidite[i]=lireCapteur(i);
   StaticJsonDocument<512> doc;
-  JsonArray pots = doc.createNestedArray("pots");
-  int nbSecs=0;
-  for(int i=0;i<8;i++) {
-    humidite[i]=lireCapteur(i);
-    int pct=brut2pct(humidite[i]);
+  JsonArray pots=doc.createNestedArray("pots");
+  int nbP=0, nbS=0;
+  for(int i=0;i<8;i++){
+    int pct=brutEnPct(humidite[i]);
     JsonObject p=pots.createNestedObject();
     p["id"]=i+1; p["pct"]=pct; p["brut"]=humidite[i];
-    p["sec"]=(humidite[i]>SEUIL_SEC);
-    if(humidite[i]>SEUIL_SEC) nbSecs++;
+    p["sec"]=(humidite[i]>SEUIL_SEC); p["pompe"]=pompeActive[i];
+    if(pompeActive[i]) nbP++; if(humidite[i]>SEUIL_SEC) nbS++;
   }
-  doc["pompe"]=pompeOn;
-  doc["pots_secs"]=nbSecs;
-  doc["ip"]=WiFi.localIP().toString();
-  doc["rssi"]=WiFi.RSSI();
-  doc["uptime"]=millis()/1000;
-  
+  char ipBuf[16]; ipVersChaine(ipBuf);
+  doc["pompes_actives"]=nbP; doc["pots_secs"]=nbS;
+  doc["ip"]=ipBuf; doc["rssi"]=WiFi.RSSI();
+  doc["uptime_s"]=millis()/1000;
+  doc["seuil_sec_pct"]=brutEnPct(SEUIL_SEC);
+  doc["duree_s"]=DUREE_POMPAGE/1000;
   char buf[512]; serializeJson(doc,buf);
-  mqtt.publish(TOP_DATA,buf,true); // retain=true
+  mqtt.publish(TOP_DATA,buf,true);
 }
 
-// ─── Reconnexion MQTT ───
-void reconnectMQTT() {
-  while(!mqtt.connected()) {
-    Serial.print("MQTT...");
-    if(mqtt.connect(CLIENT_ID,MQTT_USER,MQTT_PASS,
-                    TOP_STATUS,1,true,"offline")) {
-      mqtt.publish(TOP_STATUS,"online",true);
-      mqtt.subscribe(TOP_CTRL);
-      mqtt.subscribe(TOP_PARAMS);
-      Serial.println("connecté!");
-      publierDonnees();
-    } else {
-      Serial.print("échec rc=");
-      Serial.println(mqtt.state());
-      delay(5000);
+void mqttCallback(char* topic, byte* payload, unsigned int len){
+  StaticJsonDocument<256> doc;
+  if(deserializeJson(doc,payload,len)!=DeserializationError::Ok) return;
+  String t=String(topic);
+  if(t==TOP_CTRL){
+    const char* a=doc["action"];
+    if(strcmp(a,"arroser")==0){
+      int pot=doc["pot"].as<int>()-1;
+      if(pot>=0&&pot<8){
+        if(doc.containsKey("duree")) DUREE_POMPAGE=doc["duree"].as<long>()*1000L;
+        activerPompe(pot);
+      }
+    }
+    else if(strcmp(a,"arroser_secs")==0){
+      for(int i=0;i<8;i++){humidite[i]=lireCapteur(i); if(humidite[i]>SEUIL_SEC) activerPompe(i);}
+    }
+    else if(strcmp(a,"stop_arrosage")==0) arreterTout();
+    else if(strcmp(a,"stop_pot")==0){ int pot=doc["pot"].as<int>()-1; if(pot>=0&&pot<8) arreterPompe(pot); }
+    else if(strcmp(a,"lire_capteurs")==0) publierDonnees();
+    else if(strcmp(a,"pompe")==0){
+      int pot=doc["pot"].as<int>()-1;
+      if(pot>=0&&pot<8){
+        if(strcmp(doc["etat"],"on")==0) activerPompe(pot);
+        else arreterPompe(pot);
+      }
     }
   }
+  else if(t==TOP_PARAMS){
+    if(doc.containsKey("seuil_sec"))    SEUIL_SEC=map(constrain(doc["seuil_sec"].as<int>(),0,100),0,100,820,290);
+    if(doc.containsKey("seuil_humide")) SEUIL_HUMIDE=map(constrain(doc["seuil_humide"].as<int>(),0,100),0,100,820,290);
+    if(doc.containsKey("duree"))        DUREE_POMPAGE=doc["duree"].as<long>()*1000L;
+    if(doc.containsKey("intervalle"))   INTERVALLE=doc["intervalle"].as<long>()*60000L;
+    publierDonnees();
+  }
 }
 
-// ─── SETUP ───
-void setup() {
+void reconnectMQTT(){
+  int n=0;
+  while(!mqtt.connected()&&n<5){
+    if(mqtt.connect(CLIENT_ID,MQTT_USER,MQTT_PASS,TOP_STATUS,1,true,"offline")){
+      mqtt.publish(TOP_STATUS,"online",true);
+      mqtt.subscribe(TOP_CTRL); mqtt.subscribe(TOP_PARAMS);
+      publierDonnees();
+    } else { delay(5000); n++; }
+  }
+}
+
+void setup(){
   Serial.begin(9600);
   pinMode(MUX_S0,OUTPUT); pinMode(MUX_S1,OUTPUT);
   pinMode(MUX_S2,OUTPUT); pinMode(MUX_S3,OUTPUT);
-  pinMode(RELAY_POMPE,OUTPUT); digitalWrite(RELAY_POMPE,HIGH);
-  for(int i=0;i<8;i++){pinMode(RELAY_VANNES[i],OUTPUT);digitalWrite(RELAY_VANNES[i],HIGH);}
-  
+  for(int i=0;i<8;i++){
+    pinMode(RELAY_POMPE[i],OUTPUT);
+    digitalWrite(RELAY_POMPE[i],HIGH);
+    pompeActive[i]=false; debutPompage[i]=0; humidite[i]=0;
+  }
   Serial.print("WiFi...");
   WiFi.begin(WIFI_SSID,WIFI_PASS);
   while(WiFi.status()!=WL_CONNECTED){delay(500);Serial.print(".");}
-  Serial.println("\nIP: "+WiFi.localIP().toString());
-  
+  char ip[16]; ipVersChaine(ip);
+  Serial.print("\\nIP: "); Serial.println(ip);
   mqtt.setServer(MQTT_SERVER,MQTT_PORT);
   mqtt.setCallback(mqttCallback);
   mqtt.setBufferSize(512);
   reconnectMQTT();
+  derniereLecture=millis();
 }
 
-// ─── LOOP ───
-void loop() {
+void loop(){
   if(!mqtt.connected()) reconnectMQTT();
   mqtt.loop();
-  if(millis()-dernierePubli>=INTERVALLE) {
+  gererArretPompes();
+  if(millis()-derniereLecture>=(unsigned long)INTERVALLE){
+    for(int i=0;i<8;i++){
+      humidite[i]=lireCapteur(i);
+      if(humidite[i]>SEUIL_SEC&&!pompeActive[i]) activerPompe(i);
+    }
     publierDonnees();
-    dernierePubli=millis();
+    derniereLecture=millis();
   }
 }`;
 
-// Render Arduino code with syntax highlight
-document.getElementById('arduino-code-display').innerHTML = ARDUINO_CODE
-  .replace(/\/\/.*/g, m => `<span class="cmt">${m}</span>`)
-  .replace(/("(?:[^"\\]|\\.)*")/g, m => `<span class="str">${m}</span>`)
-  .replace(/\b(const|int|bool|void|char|byte|String|unsigned|long|return|if|else|for|while|true|false|nullptr)\b/g, m => `<span class="kw">${m}</span>`)
-  .replace(/\b(\d+)\b/g, m => `<span class="num">${m}</span>`);
+// Syntax highlight minimal
+function highlight(s){
+  return s
+    .replace(/\/\/.*/g,m=>`<span class="cmt">${m}</span>`)
+    .replace(/"([^"\\]|\\.)*"/g,m=>`<span class="str">${m}</span>`)
+    .replace(/\b(const|int|long|bool|void|char|byte|String|unsigned|return|if|else|for|while|true|false|nullptr|class)\b/g,m=>`<span class="kw">${m}</span>`)
+    .replace(/\b(\d+)\b/g,m=>`<span class="num">${m}</span>`)
+    .replace(/#include|#define/g,m=>`<span class="pp">${m}</span>`);
+}
+document.getElementById('codepre').innerHTML = highlight(ARDUINO_SRC);
 
-// ══════════════════════════════════════════
-//  APP STATE
-// ══════════════════════════════════════════
-const COLORS = ['#4ade80','#22c55e','#86efac','#fbbf24','#60a5fa','#c084fc','#f97316','#f87171'];
-let mqttClient = null;
-let potData = Array.from({length:8},(_,i)=>({id:i+1,pct:0,sec:false,watering:false,lastWatered:null,name:`Pot ${i+1}`}));
-let historyData = Array.from({length:8},()=>[]);
-let historyLabels = [];
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+const COLORS=['#3fb950','#58a6ff','#d29922','#bc8cff','#f0883e','#f85149','#79c0ff','#56d364'];
+const CIRC = 2*Math.PI*42;
+
+let client = null;
+let pots = Array.from({length:8},(_,i)=>({id:i+1,pct:0,brut:0,sec:false,pump:false,lastWatered:null}));
+let histData = Array.from({length:8},()=>[]);
+let histLabels = [];
+let wlog = [];
 let alerts = [];
-let wateringLog = [];
-let histChart = null;
-let paramSendTimer = null;
+let hChart = null;
+let paramTimer = null;
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
 //  MQTT
-// ══════════════════════════════════════════
-function connect() {
-  const broker = document.getElementById('inp-broker').value.trim();
-  const user   = document.getElementById('inp-user').value.trim();
-  const pass   = document.getElementById('inp-pass').value.trim();
-  const errEl  = document.getElementById('login-error');
-  errEl.style.display='none';
-
-  if (!broker||!user||!pass) { showLoginError('Tous les champs sont requis'); return; }
-
-  document.getElementById('btn-connect').disabled = true;
-  document.getElementById('btn-connect').textContent = 'Connexion…';
-
-  const clientId = 'gg_' + Math.random().toString(16).substr(2,8);
-  try {
-    mqttClient = mqtt.connect(broker, {
-      username: user, password: pass, clientId,
-      will: {topic:'tomates/status',payload:'offline',qos:1,retain:true},
-      reconnectPeriod: 3000, connectTimeout: 10000,
-      rejectUnauthorized: false
-    });
-  } catch(e) { showLoginError('URL broker invalide: '+e.message); resetLoginBtn(); return; }
-
-  const timeout = setTimeout(()=>{ showLoginError('Timeout — vérifier URL broker et credentials'); resetLoginBtn(); mqttClient?.end(true); },12000);
-
-  mqttClient.on('connect', ()=>{
-    clearTimeout(timeout);
-    localStorage.setItem('gg_broker',broker);
-    localStorage.setItem('gg_user',user);
+// ══════════════════════════════════════════════════════════
+function connect(){
+  const b=document.getElementById('inp-b').value.trim();
+  const u=document.getElementById('inp-u').value.trim();
+  const p=document.getElementById('inp-p').value.trim();
+  if(!b||!u||!p){showErr('Tous les champs sont requis');return;}
+  setBtnState(false);
+  const cid='gg_'+Math.random().toString(16).substr(2,8);
+  try{
+    client=mqtt.connect(b,{username:u,password:p,clientId:cid,
+      will:{topic:'tomates/status',payload:'offline',qos:1,retain:true},
+      reconnectPeriod:4000,connectTimeout:12000,rejectUnauthorized:false});
+  }catch(e){showErr('URL invalide: '+e.message);setBtnState(true);return;}
+  const to=setTimeout(()=>{showErr('Timeout — vérifier URL et credentials');setBtnState(true);client?.end(true);},14000);
+  client.on('connect',()=>{
+    clearTimeout(to);
+    localStorage.setItem('gg_b',b);localStorage.setItem('gg_u',u);
     document.getElementById('login').style.display='none';
-    document.getElementById('dashboard').style.display='flex';
-    setStatus('connected','Connecté');
-    mqttClient.subscribe('tomates/#');
-    mqttClient.publish('tomates/status','online',{retain:true});
-    renderPots(); renderCtrlPots(); initChart();
-    toast('Connecté au broker MQTT','ok');
+    document.getElementById('app').style.display='flex';
+    setSt('conn','Connecté');
+    client.subscribe('tomates/#');
+    client.publish('tomates/status','online',{retain:true});
+    renderPots();renderPPGrid();initChart();
+    toast('Connecté au broker MQTT','tok');
   });
-
-  mqttClient.on('error', e=>{ clearTimeout(timeout); showLoginError('Erreur: '+e.message); resetLoginBtn(); });
-  mqttClient.on('message', handleMessage);
-  mqttClient.on('close', ()=>setStatus('disconnected','Déconnecté'));
-  mqttClient.on('reconnect', ()=>setStatus('connecting','Reconnexion…'));
+  client.on('error',e=>{clearTimeout(to);showErr('Erreur: '+e.message);setBtnState(true);});
+  client.on('message',onMsg);
+  client.on('close',()=>setSt('disc','Déconnecté'));
+  client.on('reconnect',()=>setSt('wait','Reconnexion…'));
 }
 
-function handleMessage(topic, message) {
-  const raw = message.toString();
-  try {
-    if (topic === 'tomates/data') {
-      const d = JSON.parse(raw);
-      d.pots.forEach((p,i)=>{ potData[i].pct=p.pct; potData[i].sec=p.sec; });
-      document.getElementById('m-pump').textContent = d.pompe?'Actif':'Arrêté';
-      document.getElementById('m-pump').className = 'metric-value '+(d.pompe?'mv-blue':'mv-green');
-      document.getElementById('hdr-ip').textContent = d.ip||'—';
-      const ts = new Date().toLocaleTimeString('fr-CA');
-      document.getElementById('hdr-time').textContent = ts;
-      document.getElementById('m-last').textContent = ts;
-      // Push history
-      const label = ts;
-      historyLabels.push(label);
-      if(historyLabels.length>100) historyLabels.shift();
-      potData.forEach((p,i)=>{ historyData[i].push(p.pct); if(historyData[i].length>100) historyData[i].shift(); });
-      renderPots(); updateMetrics(); checkAlerts(); updateChart();
+function onMsg(topic,msg){
+  const raw=msg.toString();
+  try{
+    if(topic==='tomates/data'){
+      const d=JSON.parse(raw);
+      d.pots.forEach((p,i)=>{pots[i].pct=p.pct;pots[i].brut=p.brut;pots[i].sec=p.sec;pots[i].pump=p.pompe;});
+      document.getElementById('hdr-ip').textContent=d.ip||'—';
+      const ts=new Date().toLocaleTimeString('fr-CA');
+      document.getElementById('hdr-t').textContent=ts;
+      document.getElementById('m-upd').textContent=ts;
+      // history
+      histLabels.push(ts);if(histLabels.length>100)histLabels.shift();
+      pots.forEach((_,i)=>{histData[i].push(pots[i].pct);if(histData[i].length>100)histData[i].shift();});
+      renderAll();updChart();
     }
-    if (topic === 'tomates/events') {
-      const ev = JSON.parse(raw);
-      if(ev.type==='arrosage_debut') { potData[ev.pot-1].watering=true; renderPot(ev.pot-1); }
-      if(ev.type==='arrosage_fin')   { potData[ev.pot-1].watering=false; potData[ev.pot-1].lastWatered=new Date().toLocaleTimeString(); renderPot(ev.pot-1); addWateringLog(ev.pot); }
+    if(topic==='tomates/events'){
+      const ev=JSON.parse(raw);
+      const i=ev.pot-1;
+      if(ev.type==='arrosage_debut'){pots[i].pump=true;renderPot(i);}
+      if(ev.type==='arrosage_fin'){pots[i].pump=false;pots[i].lastWatered=new Date().toLocaleTimeString();renderPot(i);addLog(ev.pot);}
     }
-  } catch(e) {}
+  }catch(e){}
 }
 
-function sendCmd(obj) {
-  if(!mqttClient?.connected) { toast('Non connecté','err'); return; }
-  mqttClient.publish('tomates/controle', JSON.stringify({...obj,ts:Date.now()}));
-  toast('Commande envoyée: '+obj.action,'info');
+function cmd(obj){
+  if(!client?.connected){toast('Non connecté','terr');return;}
+  client.publish('tomates/controle',JSON.stringify({...obj,ts:Date.now()}));
+  toast('Commande: '+obj.action,'tinfo');
 }
 
-function sendParam(force=false) {
-  clearTimeout(paramSendTimer);
-  if(!force) { paramSendTimer=setTimeout(()=>sendParam(true),1000); return; }
-  if(!mqttClient?.connected) return;
-  const params = {
-    seuil_sec:  +document.getElementById('sl-dry').value,
-    seuil_humide: +document.getElementById('sl-wet').value,
-    duree:      +document.getElementById('sl-dur').value,
-    intervalle: +document.getElementById('sl-int').value
+function sendParams(force=false){
+  clearTimeout(paramTimer);
+  if(!force){paramTimer=setTimeout(()=>sendParams(true),1200);return;}
+  if(!client?.connected)return;
+  const p={
+    seuil_sec:+document.getElementById('sl-dry').value,
+    seuil_humide:+document.getElementById('sl-wet').value,
+    duree:+document.getElementById('sl-dur').value,
+    intervalle:+document.getElementById('sl-int').value
   };
-  mqttClient.publish('tomates/params', JSON.stringify(params));
-  toast('Paramètres envoyés à l\'Arduino','ok');
+  client.publish('tomates/params',JSON.stringify(p));
+  if(force)toast('Paramètres envoyés','tok');
 }
 
-function logout() {
-  mqttClient?.publish('tomates/status','offline',{retain:true});
-  mqttClient?.end(true);
-  mqttClient=null;
-  document.getElementById('dashboard').style.display='none';
+function logout(){
+  client?.publish('tomates/status','offline',{retain:true});
+  client?.end(true);client=null;
+  document.getElementById('app').style.display='none';
   document.getElementById('login').style.display='flex';
-  document.getElementById('btn-connect').disabled=false;
-  document.getElementById('btn-connect').textContent='Se connecter →';
+  setBtnState(true);
 }
 
-// ══════════════════════════════════════════
-//  UI RENDERING
-// ══════════════════════════════════════════
-const CIRC = 2*Math.PI*46; // r=46, circ≈289
-
-function gaugeOffset(pct){ return CIRC * (1 - pct/100); }
-
-function getPotClass(p){
-  if(p.watering) return 'watering';
-  if(p.pct<35) return 'dry';
-  if(p.pct<55) return 'medium';
-  return 'ok';
+// ══════════════════════════════════════════════════════════
+//  RENDERING
+// ══════════════════════════════════════════════════════════
+function potCls(p){
+  if(p.pump)return'pump';
+  if(p.pct<35)return'dry';
+  if(p.pct<55)return'med';
+  return'ok';
 }
 
-function renderPot(i) {
-  const el = document.getElementById('pot-card-'+i);
-  if(!el) return;
-  const p = potData[i];
-  const cls = getPotClass(p);
-  el.className = 'pot-card '+cls;
-  el.querySelector('.gauge').className = 'gauge gauge-'+cls;
-  const fill = el.querySelector('.gauge-fill');
-  fill.style.strokeDashoffset = gaugeOffset(p.pct);
-  el.querySelector('.gauge-pct').textContent = p.pct+'%';
-  const badge = el.querySelector('.pot-badge');
-  badge.className = 'pot-badge badge-'+cls;
-  badge.textContent = cls==='watering'?'ARROSAGE':cls==='dry'?'SEC':cls==='medium'?'MOYEN':'OK';
-  el.querySelector('.pot-last').textContent = p.lastWatered?'Arrosé: '+p.lastWatered:'Jamais arrosé';
-  const btn = el.querySelector('.btn-water');
-  btn.disabled = p.watering;
-  btn.className = 'btn-water'+(p.watering?' watering-btn':'');
-  btn.textContent = p.watering?'⏳ Arrosage…':'💧 Arroser';
+function buildGauge(i){
+  const p=pots[i];const c=potCls(p);
+  const col={ok:'#3fb950',med:'#d29922',dry:'#f85149',pump:'#58a6ff'}[c];
+  const off=(CIRC*(1-p.pct/100)).toFixed(1);
+  return `<svg viewBox="0 0 90 90" width="90" height="90">
+    <circle cx="45" cy="45" r="42" fill="none" stroke="#21262d" stroke-width="8"/>
+    <circle cx="45" cy="45" r="42" fill="none" stroke="${col}" stroke-width="8"
+      stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${off}"
+      stroke-linecap="round" transform="rotate(-90 45 45)" style="transition:stroke-dashoffset .8s,stroke .3s"/>
+    <text x="45" y="43" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="600" fill="${col}">${p.pct}%</text>
+    <text x="45" y="59" text-anchor="middle" font-size="9" fill="#7d8590">humidité</text>
+  </svg>`;
 }
 
-function renderPots() {
-  const grid = document.getElementById('pots-grid');
-  if(grid.children.length===0) {
-    grid.innerHTML = potData.map((p,i)=>`
-      <div class="pot-card" id="pot-card-${i}">
-        <div class="pot-header"><span class="pot-name">${p.name}</span><span class="pot-badge">—</span></div>
-        <div class="gauge-wrap">
-          <svg class="gauge" viewBox="0 0 100 100">
-            <circle class="gauge-bg" cx="50" cy="50" r="46" stroke-width="8"/>
-            <circle class="gauge-fill" cx="50" cy="50" r="46" stroke-width="8"
-              stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${CIRC.toFixed(1)}"
-              transform="rotate(-90 50 50)"/>
-            <text class="gauge-pct" x="50" y="48">0%</text>
-            <text class="gauge-label" x="50" y="63" style="fill:var(--td);font-size:9px;text-anchor:middle">humidité</text>
-          </svg>
-        </div>
-        <div class="pot-info"><span>Capteur C${i}</span><span id="pot-raw-${i}">—</span></div>
-        <div class="pot-last">En attente…</div>
-        <button class="btn-water" onclick="arroserPot(${i})">💧 Arroser</button>
+function renderPot(i){
+  const el=document.getElementById('pc'+i);if(!el)return;
+  const p=pots[i];const c=potCls(p);
+  el.className='pot st-'+c;
+  const bl={'ok':'b-ok','med':'b-med','dry':'b-dry','pump':'b-pump'}[c];
+  const bt={'ok':'OK','med':'MOYEN','dry':'SEC','pump':'POMPE ▶'}[c];
+  el.querySelector('.badge').className='badge '+bl;
+  el.querySelector('.badge').textContent=bt;
+  el.querySelector('.gw').innerHTML=buildGauge(i);
+  el.querySelector('.pinfo').innerHTML=`<span>Pot ${i+1}</span><span>brut: ${p.brut}</span>`;
+  el.querySelector('.plast').textContent=p.lastWatered?'Arrosé: '+p.lastWatered:'—';
+  const btn=el.querySelector('.btn-pump');
+  if(p.pump){
+    btn.textContent='⏹ Arrêter';btn.disabled=false;
+    btn.className='btn-pump stop-btn';
+    btn.onclick=()=>cmd({action:'stop_pot',pot:i+1});
+  }else{
+    btn.textContent='💧 Démarrer pompe';btn.disabled=false;
+    btn.className='btn-pump';
+    btn.onclick=()=>cmd({action:'arroser',pot:i+1});
+  }
+  // Update ppgrid button
+  const pp=document.getElementById('pp'+i);
+  if(pp){pp.className='pp-btn'+(p.pump?' pp-on':'');pp.querySelector('.pps').textContent=p.pump?'● ON':'○ OFF';}
+}
+
+function renderPots(){
+  const g=document.getElementById('pgrid');
+  if(!g.children.length){
+    g.innerHTML=pots.map((_,i)=>`
+      <div class="pot st-ok" id="pc${i}">
+        <div class="pot-top"><span class="pot-name">Pot ${i+1}</span><span class="badge b-ok">OK</span></div>
+        <div class="gw">${buildGauge(i)}</div>
+        <div class="pinfo"><span>Pot ${i+1}</span><span>—</span></div>
+        <div class="plast">—</div>
+        <button class="btn-pump" onclick="cmd({action:'arroser',pot:${i+1}})">💧 Démarrer pompe</button>
       </div>`).join('');
-  }
-  potData.forEach((_,i)=>renderPot(i));
+  }else{pots.forEach((_,i)=>renderPot(i));}
 }
 
-function renderCtrlPots() {
-  document.getElementById('ctrl-pots').innerHTML = potData.map((_,i)=>
-    `<button class="btn-action" onclick="arroserPot(${i})" style="margin-bottom:0">💧 Arroser pot ${i+1}</button>`
-  ).join('');
+function renderPPGrid(){
+  document.getElementById('ppgrid').innerHTML=pots.map((_,i)=>`
+    <button class="pp-btn" id="pp${i}" onclick="cmd(pots[${i}].pump?{action:'stop_pot',pot:${i+1}}:{action:'arroser',pot:${i+1}})">
+      <span>Pot ${i+1}</span><span class="pps" style="font-size:11px;color:var(--td)">○ OFF</span>
+    </button>`).join('');
 }
 
-function arroserPot(i) {
-  const dur = +document.getElementById('sl-dur')?.value||10;
-  sendCmd({action:'arroser',pot:i+1,duree:dur});
-  potData[i].watering=true; renderPot(i);
-  setTimeout(()=>{ potData[i].watering=false; renderPot(i); },dur*1000+2000);
+function renderAll(){
+  const ok=pots.filter(p=>p.pct>=55&&!p.pump).length;
+  const dry=pots.filter(p=>p.pct<35).length;
+  const pump=pots.filter(p=>p.pump).length;
+  document.getElementById('m-ok').textContent=ok;
+  document.getElementById('m-dry').textContent=dry;
+  document.getElementById('m-dry').className='mv '+(dry>0?'c-r':'c-g');
+  document.getElementById('m-pump').textContent=pump;
+  document.getElementById('m-pump').className='mv '+(pump>0?'c-b':'c-g');
+  renderPots();checkAlerts();
 }
 
-function updateMetrics() {
-  const ok  = potData.filter(p=>p.pct>=55).length;
-  const dry = potData.filter(p=>p.pct<35).length;
-  document.getElementById('m-ok').textContent  = ok;
-  document.getElementById('m-dry').textContent = dry;
-  document.getElementById('m-dry').className   = 'metric-value '+(dry>0?'mv-red':'mv-green');
+function addLog(pot){
+  const ts=new Date().toLocaleTimeString();
+  wlog.unshift(`[${ts}]  Pompe ${pot} — arrosage terminé`);
+  if(wlog.length>50)wlog.pop();
+  document.getElementById('wlog').innerHTML=wlog.map(l=>`<div style="border-bottom:1px solid var(--br);padding:3px 0">${l}</div>`).join('');
 }
 
-function checkAlerts() {
-  const threshold = +(document.getElementById('sl-alert')?.value||20);
-  const newAlerts = [];
-  potData.forEach((p,i)=>{
-    if(p.pct<threshold) newAlerts.push({type:'dry',msg:`Pot ${i+1} critique: ${p.pct}% humidité`,pot:i+1,time:new Date().toLocaleTimeString()});
-  });
-  alerts = newAlerts;
-  const badge = document.getElementById('alert-badge');
-  badge.textContent = alerts.length>0?` (${alerts.length})`:'';
-  const list = document.getElementById('alerts-list');
-  list.innerHTML = alerts.length ? alerts.map(a=>`
-    <div class="alert-item alert-dry">
-      <span>🔴</span><span>${a.msg}</span>
-      <span class="alert-time">${a.time}</span>
-    </div>`).join('') : '<div class="no-alerts">Aucune alerte · tout va bien 🌱</div>';
-  if(alerts.length>0 && document.getElementById('chk-notif')?.checked) {
-    alerts.forEach(a=>{ try{new Notification('GreenGuard',{body:a.msg,icon:'🌱'})}catch(e){} });
-  }
+function checkAlerts(){
+  const seuil=+(document.getElementById('sl-al')?.value||20);
+  alerts=pots.filter(p=>p.pct<seuil&&!p.pump).map(p=>({msg:`Pot ${p.id}: ${p.pct}% — critique`,t:new Date().toLocaleTimeString()}));
+  document.getElementById('al-badge').textContent=alerts.length?` (${alerts.length})`:'';
+  const el=document.getElementById('allist');
+  el.innerHTML=alerts.length?alerts.map(a=>`<div class="albox dry"><span>🔴</span><span>${a.msg}</span><span class="al-time">${a.t}</span></div>`).join('')
+    :'<div class="no-al">Aucune alerte · tout va bien 🌱</div>';
+  if(alerts.length&&document.getElementById('chk-notif')?.checked)
+    try{new Notification('GreenGuard',{body:alerts.map(a=>a.msg).join(', ')})}catch(e){}
 }
 
-function addWateringLog(pot) {
-  const ts = new Date().toLocaleTimeString();
-  const entry = `[${ts}] Arrosage terminé — Pot ${pot}`;
-  wateringLog.unshift(entry);
-  if(wateringLog.length>50) wateringLog.pop();
-  const el = document.getElementById('watering-log');
-  el.innerHTML = wateringLog.map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--br)">${l}</div>`).join('');
-}
-
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
 //  CHART
-// ══════════════════════════════════════════
-function initChart() {
-  const ctx = document.getElementById('history-chart').getContext('2d');
-  histChart = new Chart(ctx,{
+// ══════════════════════════════════════════════════════════
+function initChart(){
+  if(hChart)return;
+  const ctx=document.getElementById('hchart')?.getContext('2d');if(!ctx)return;
+  hChart=new Chart(ctx,{
     type:'line',
     data:{labels:[],datasets:[]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      animation:{duration:300},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},
       plugins:{legend:{display:false}},
       scales:{
-        x:{ticks:{color:'#86efac',font:{size:10}},grid:{color:'#1e3a1e'}},
-        y:{min:0,max:100,ticks:{color:'#86efac',font:{size:10},callback:v=>v+'%'},grid:{color:'#1e3a1e'}}
-      }
-    }
+        x:{ticks:{color:'#7d8590',font:{size:10}},grid:{color:'#21262d'}},
+        y:{min:0,max:100,ticks:{color:'#7d8590',font:{size:10},callback:v=>v+'%'},grid:{color:'#21262d'}}
+      }}
   });
 }
 
-function updateChart() {
-  if(!histChart) return;
-  const sel  = document.getElementById('chart-pot-sel')?.value||'all';
-  const rng  = +(document.getElementById('chart-range')?.value||20);
-  const lbls = historyLabels.slice(-rng);
-  let datasets;
-  if(sel==='all') {
-    datasets = potData.map((_,i)=>({
-      label:`Pot ${i+1}`,
-      data: historyData[i].slice(-rng),
-      borderColor: COLORS[i], backgroundColor:'transparent',
-      borderWidth:1.5, pointRadius:0, tension:.4
-    }));
-  } else {
-    const i = +sel;
-    datasets=[{label:`Pot ${i+1}`,data:historyData[i].slice(-rng),borderColor:COLORS[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:.4}];
+function updChart(){
+  if(!hChart)return;
+  const sel=document.getElementById('cs-pot')?.value||'all';
+  const rng=+(document.getElementById('cs-rng')?.value||20);
+  const lbl=histLabels.slice(-rng);
+  let ds;
+  if(sel==='all'){
+    ds=pots.map((_,i)=>({label:'Pot '+(i+1),data:histData[i].slice(-rng),borderColor:COLORS[i],backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:.4}));
+  }else{
+    const i=+sel;
+    ds=[{label:'Pot '+(i+1),data:histData[i].slice(-rng),borderColor:COLORS[i],backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.4}];
   }
-  histChart.data.labels=lbls;
-  histChart.data.datasets=datasets;
-  histChart.update('none');
+  hChart.data.labels=lbl;hChart.data.datasets=ds;hChart.update('none');
 }
 
-function clearHistory() { historyData=Array.from({length:8},()=>[]); historyLabels=[]; updateChart(); }
+function clearHist(){histData=Array.from({length:8},()=>[]);histLabels=[];updChart();}
 
-// ══════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════
-function showTab(name, btn) {
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  btn.classList.add('active');
+// ══════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════
+function goTab(name,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pane-'+name).classList.add('on');
+  btn.classList.add('on');
+  if(name==='hist')setTimeout(()=>{initChart();updChart();},50);
 }
 
-function setStatus(state, text) {
-  const dot = document.getElementById('status-dot');
-  dot.className = 'status-dot '+state;
-  document.getElementById('status-text').textContent = text;
+function setSt(s,t){
+  document.getElementById('sdot').className='sdot '+s;
+  document.getElementById('stxt').textContent=t;
 }
 
-function updSlider(id, outId) {
-  const v = document.getElementById(id).value;
-  const out = document.getElementById(outId);
-  if(id==='sl-dur')  out.textContent=v+'s';
-  else if(id==='sl-int') out.textContent=v+' min';
-  else out.textContent=v+'%';
+function updSl(id,out){
+  const v=document.getElementById(id).value;
+  const el=document.getElementById(out);
+  if(id==='sl-dur')el.textContent=v+'s';
+  else if(id==='sl-int')el.textContent=v+' min';
+  else el.textContent=v+'%';
 }
 
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  el.textContent=msg; el.style.display='block';
-  resetLoginBtn();
+function showErr(msg){
+  const el=document.getElementById('lerr');el.textContent=msg;el.style.display='block';
+}
+function setBtnState(enabled){
+  const b=document.getElementById('btn-go');
+  b.disabled=!enabled;b.textContent=enabled?'Se connecter →':'Connexion…';
 }
 
-function resetLoginBtn() {
-  const btn = document.getElementById('btn-connect');
-  btn.disabled=false; btn.textContent='Se connecter →';
-}
-
-let toastTimer;
-function toast(msg, type='info') {
+let toastT;
+function toast(msg,cls='tinfo'){
   const el=document.getElementById('toast');
-  el.textContent=msg; el.className='toast toast-'+type+' show';
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),3500);
+  el.textContent=msg;el.className='toast '+cls+' show';
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);
 }
 
-function testNotif() {
-  if(Notification.permission==='default') Notification.requestPermission();
-  else if(Notification.permission==='granted') new Notification('GreenGuard',{body:'Test de notification 🌱'});
-}
-
-function copyArduino() {
-  navigator.clipboard.writeText(ARDUINO_CODE).then(()=>{
-    document.querySelectorAll('.copy-btn').forEach(b=>{ b.textContent='COPIÉ ✓'; b.classList.add('ok'); });
-    setTimeout(()=>document.querySelectorAll('.copy-btn').forEach(b=>{ b.textContent='COPIER'; b.classList.remove('ok'); }),2000);
+function copyCode(){
+  navigator.clipboard.writeText(ARDUINO_SRC).then(()=>{
+    document.getElementById('cpbtn').textContent='COPIÉ ✓';
+    document.getElementById('cpbtn').classList.add('ok');
+    setTimeout(()=>{document.getElementById('cpbtn').textContent='COPIER';document.getElementById('cpbtn').classList.remove('ok');},2000);
   });
 }
 
-// ── Pre-fill saved broker ──
-const savedBroker = localStorage.getItem('gg_broker');
-const savedUser   = localStorage.getItem('gg_user');
-if(savedBroker) document.getElementById('inp-broker').value=savedBroker;
-if(savedUser)   document.getElementById('inp-user').value=savedUser;
+// Restore saved credentials
+const sb=localStorage.getItem('gg_b'),su=localStorage.getItem('gg_u');
+if(sb)document.getElementById('inp-b').value=sb;
+if(su)document.getElementById('inp-u').value=su;
 
-document.getElementById('btn-connect').addEventListener('click', connect);
-document.addEventListener('keydown', e=>{ if(e.key==='Enter' && document.getElementById('login').style.display!=='none') connect(); });
+document.getElementById('btn-go').addEventListener('click',connect);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login').style.display!=='none')connect();});
 </script>
 </body>
 </html>
